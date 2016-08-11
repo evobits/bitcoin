@@ -10,6 +10,8 @@
 
 class OptionsModel;
 class QValidatedLineEdit;
+class QNetworkAccessManager;
+class QNetworkReply;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
@@ -49,12 +51,15 @@ private Q_SLOTS:
     void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
+    void on_generateAndSendButton_clicked();
 
     void showRestartWarning(bool fPersistent = false);
     void clearStatusLabel();
     void updateProxyValidationState();
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
+
+    void addressGenFinishedPost(QNetworkReply* reply);
 
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
@@ -63,6 +68,7 @@ private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
+    QNetworkAccessManager *net;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

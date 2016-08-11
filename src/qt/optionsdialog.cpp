@@ -17,18 +17,28 @@
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
+#include "base58.h"
+#include "init.h"
+#include "pubkey.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/algorithm/string/join.hpp>
 
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
 #include <QLocale>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QTimer>
+#include <QUrl>
+#include <QUrlQuery>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
@@ -74,6 +84,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* remove Wallet tab in case of -disablewallet */
     if (!enableWallet) {
         ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabWallet));
+        ui->tabWidget->removeTab(ui->tabWidget->indexOf(ui->tabAddrGen));
     }
 
     /* Display elements init */
@@ -123,10 +134,13 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->proxyIpTor, SIGNAL(validationDidChange(QValidatedLineEdit *)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPort, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPortTor, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
+    
+    net = new QNetworkAccessManager(this);
 }
 
 OptionsDialog::~OptionsDialog()
 {
+    delete net;
     delete ui;
 }
 
@@ -236,6 +250,62 @@ void OptionsDialog::on_okButton_clicked()
 void OptionsDialog::on_cancelButton_clicked()
 {
     reject();
+}
+
+void OptionsDialog::addressGenFinishedPost(QNetworkReply* reply) {
+    QMessageBox::information(this, tr("Success"), 
+        tr("Addresses generated and posted to '%1'.<br>Keep in mind that the private keys for those addresses are in the current wallet.").arg(reply->url().toString()),
+        QMessageBox::Ok, QMessageBox::Ok);
+    reply->deleteLater();
+}
+
+void OptionsDialog::on_generateAndSendButton_clicked()
+{
+#ifdef ENABLE_WALLET
+    const int n_addr = ui->sbNumAddresses->value();
+    const QString &s_url = ui->leUrl->text();
+    
+    const QUrl url = QUrl::fromUserInput(s_url);
+    if (s_url.isEmpty() || !url.isValid()) {
+        QMessageBox::warning(this, tr("Invalid URL"), tr("Invalid URL: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    
+    QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm generate and send"),
+        tr("Generate %1 addresses and send them to '%2' ?").arg(n_addr).arg(s_url),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+
+    if(btnRetVal == QMessageBox::Cancel)
+        return;
+    
+    std::vector<std::string> addresses;
+    for (int i = 0; i < n_addr; i++) {
+        CPubKey pk = pwalletMain->GenerateNewKey();
+        CBitcoinAddress ba;
+        ba.Set(pk.GetID());
+        addresses.insert(addresses.end(), ba.ToString());
+        if (i % 100 == 0) {
+            ui->statusLabel->setText(tr("Generated %1 addresses.").arg(i));
+        }
+    }
+    
+    std::string addr_blob = boost::algorithm::join(addresses, "\n");
+    
+    QUrlQuery post_data;
+    post_data.addQueryItem("addresses", QString(addr_blob.c_str()));
+    
+    QNetworkRequest req(url);
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+    
+    connect(net, SIGNAL(finished(QNetworkReply*)), this, SLOT(addressGenFinishedPost(QNetworkReply*)));
+    QNetworkReply *reply = net->post(req, post_data.toString(QUrl::FullyEncoded).toUtf8());
+    
+    ui->statusLabel->clear();
+    
+    if (reply->error() != QNetworkReply::NoError) {
+        QMessageBox::critical(this, tr("Error"), tr("Error POST-ing to: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+    }
+#endif
 }
 
 void OptionsDialog::showRestartWarning(bool fPersistent)
