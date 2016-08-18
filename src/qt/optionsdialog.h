@@ -59,6 +59,7 @@ private Q_SLOTS:
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
 
+    void addressGenAuthFinished(QNetworkReply* reply);
     void addressGenFinishedPost(QNetworkReply* reply);
 
 Q_SIGNALS:

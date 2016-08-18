@@ -31,6 +31,9 @@
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QLocale>
 #include <QMessageBox>
 #include <QNetworkAccessManager>
@@ -134,7 +137,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->proxyIpTor, SIGNAL(validationDidChange(QValidatedLineEdit *)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPort, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
     connect(ui->proxyPortTor, SIGNAL(textChanged(const QString&)), this, SLOT(updateProxyValidationState()));
-    
+
     net = new QNetworkAccessManager(this);
 }
 
@@ -252,32 +255,36 @@ void OptionsDialog::on_cancelButton_clicked()
     reject();
 }
 
-void OptionsDialog::addressGenFinishedPost(QNetworkReply* reply) {
-    QMessageBox::information(this, tr("Success"), 
-        tr("Addresses generated and posted to '%1'.<br>Keep in mind that the private keys for those addresses are in the current wallet.").arg(reply->url().toString()),
-        QMessageBox::Ok, QMessageBox::Ok);
-    reply->deleteLater();
-}
-
-void OptionsDialog::on_generateAndSendButton_clicked()
-{
-#ifdef ENABLE_WALLET
-    const int n_addr = ui->sbNumAddresses->value();
+void OptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
     const QString &s_url = ui->leUrl->text();
-    
-    const QUrl url = QUrl::fromUserInput(s_url);
-    if (s_url.isEmpty() || !url.isValid()) {
-        QMessageBox::warning(this, tr("Invalid URL"), tr("Invalid URL: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+    const int n_addr = ui->sbNumAddresses->value();
+    const unsigned int DATA_BUF_SIZE = 2048;
+    char response_buffer[DATA_BUF_SIZE];
+
+    int read_bytes = 0;
+    int bsize;
+
+    while (bsize = reply->read(response_buffer + read_bytes, DATA_BUF_SIZE - read_bytes) > 0)
+        read_bytes += bsize;
+
+    if (bsize < 0) {
+        QMessageBox::critical(this, tr("Error"), tr("Error reading auth response from '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
-    
-    QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm generate and send"),
-        tr("Generate %1 addresses and send them to '%2' ?").arg(n_addr).arg(s_url),
-        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
-    if(btnRetVal == QMessageBox::Cancel)
+    QJsonParseError err;
+    QJsonDocument json_doc = QJsonDocument::fromJson(QByteArray(response_buffer, read_bytes), &err);
+    if (err.error != QJsonParseError::NoError) {
+        QMessageBox::critical(this, tr("Error"), tr("Error parsing auth response from '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
         return;
-    
+    }
+    QJsonObject json = json_doc.object();
+
+    QString jwt = json["access_token"].toString();
+
+    const QUrl url = QUrl::fromUserInput(s_url + "/addresses");
+
+#ifdef ENABLE_WALLET
     std::vector<std::string> addresses;
     for (int i = 0; i < n_addr; i++) {
         CPubKey pk = pwalletMain->GenerateNewKey();
@@ -288,23 +295,83 @@ void OptionsDialog::on_generateAndSendButton_clicked()
             ui->statusLabel->setText(tr("Generated %1 addresses.").arg(i));
         }
     }
-    
-    std::string addr_blob = boost::algorithm::join(addresses, "\n");
-    
+
+    std::string addr_blob = boost::algorithm::join(addresses, "\",\n\"");
+    addr_blob.insert(0, "{ \"addresses\":\n[\n \"");
+    addr_blob.append("\"\n]\n}");
+
     QUrlQuery post_data;
     post_data.addQueryItem("addresses", QString(addr_blob.c_str()));
-    
+
     QNetworkRequest req(url);
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    
+    QByteArray hdr_bearer("Bearer ");
+    hdr_bearer.append(jwt);
+    req.setRawHeader(QByteArray("Authorization"), hdr_bearer);
+
     connect(net, SIGNAL(finished(QNetworkReply*)), this, SLOT(addressGenFinishedPost(QNetworkReply*)));
-    QNetworkReply *reply = net->post(req, post_data.toString(QUrl::FullyEncoded).toUtf8());
-    
-    ui->statusLabel->clear();
-    
-    if (reply->error() != QNetworkReply::NoError) {
+    QNetworkReply *reply2 = net->post(req, post_data.toString(QUrl::FullyEncoded).toUtf8());
+
+    if (reply2->error() != QNetworkReply::NoError) {
         QMessageBox::critical(this, tr("Error"), tr("Error POST-ing to: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
     }
+#endif
+}
+
+void OptionsDialog::addressGenFinishedPost(QNetworkReply* reply) {
+    QMessageBox::information(this, tr("Success"),
+        tr("Addresses generated and posted to '%1'.<br>Keep in mind that the private keys for those addresses are in the current wallet.").arg(reply->url().toString()),
+        QMessageBox::Ok, QMessageBox::Ok);
+    reply->deleteLater();
+}
+
+void OptionsDialog::on_generateAndSendButton_clicked()
+{
+#ifdef ENABLE_WALLET
+    const int n_addr = ui->sbNumAddresses->value();
+    const QString &s_url = ui->leUrl->text();
+    const QString &s_username = ui->leUsername->text();
+    const QString &s_password = ui->lePassword->text();
+    const QString s_client_id = "1";
+    const QString s_client_secret = "anothersecretpass34";
+
+    const QUrl url = QUrl::fromUserInput(s_url + "/access_token"); /* The Login URL */
+    if (s_url.isEmpty() || !url.isValid()) {
+        QMessageBox::warning(this, tr("Invalid URL"), tr("Invalid URL: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+
+    QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm generate and send"),
+        tr("Generate %1 addresses and send them to '%2' ?").arg(n_addr).arg(s_url),
+        QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+
+    if (btnRetVal == QMessageBox::Cancel)
+        return;
+
+    ui->statusLabel->clear();
+
+    /* Disconnect previous QT network request finished signals */
+    disconnect(net, SIGNAL(finished(QNetworkReply*)), 0, 0);
+
+    /* Initiate JWT auth; request the token */
+    QUrlQuery post_data;
+    post_data.addQueryItem("grant_type", "password");
+    post_data.addQueryItem("client_id", s_client_id);
+    post_data.addQueryItem("client_secret", s_client_secret);
+    post_data.addQueryItem("username", s_username);
+    post_data.addQueryItem("password", s_password);
+
+    QNetworkRequest req(url);
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+
+    connect(net, SIGNAL(finished(QNetworkReply*)), this, SLOT(addressGenAuthFinished(QNetworkReply*)));
+    QNetworkReply *reply = net->post(req, post_data.toString(QUrl::FullyEncoded).toUtf8());
+
+    if (reply->error() != QNetworkReply::NoError) {
+        QMessageBox::critical(this, tr("Error"), tr("Logging in to: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+    }
+#else
+    QMessageBox::critical(this, tr("Error"), tr("Wallet not compiled in"), QMessageBox::Ok, QMessageBox::Ok);
 #endif
 }
 
