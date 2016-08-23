@@ -30,6 +30,7 @@
 
 #include <QDataWidgetMapper>
 #include <QDir>
+#include <QFile>
 #include <QIntValidator>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -167,6 +168,7 @@ void OptionsDialog::setModel(OptionsModel *model)
         mapper->toFirst();
 
         updateDefaultProxyNets();
+        loadEnhOptions();
     }
 
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
@@ -248,6 +250,7 @@ void OptionsDialog::on_okButton_clicked()
     mapper->submit();
     accept();
     updateDefaultProxyNets();
+    saveEnhOptions();
 }
 
 void OptionsDialog::on_cancelButton_clicked()
@@ -276,7 +279,7 @@ void OptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
     QJsonParseError err;
     QJsonDocument json_doc = QJsonDocument::fromJson(auth_response_buffer, &err);
     if (err.error != QJsonParseError::NoError) {
-        QMessageBox::critical(this, tr("Error"), tr("Error parsing auth response from '%1' (%2: %3)").arg(s_url).arg((int)err.error).arg(auth_response_buffer.data()), QMessageBox::Ok, QMessageBox::Ok);
+        QMessageBox::critical(this, tr("Error"), tr("Error parsing auth response from '%1' (%2)").arg(s_url).arg((int)err.error), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
     QJsonObject json = json_doc.object();
@@ -444,6 +447,47 @@ void OptionsDialog::updateDefaultProxyNets()
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
+}
+
+// To avoid messing (and maintaining compatibility) with the official QT options model,
+// save "enhanced client" settings in a JSON file in the data directory.
+void OptionsDialog::saveEnhOptions() {
+    QString saveFileName(GetDataDir(false).generic_string().c_str());
+    saveFileName.append("/" BITCOIN_ENH_CONF_BASE_FILENAME);
+    QFile saveFile(saveFileName);
+    if (!saveFile.open(QIODevice::WriteOnly)) {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot open save options file %1").arg(saveFileName), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    QJsonObject options;
+    options["type"] = QString("bitcoin-enh");
+    options["APIUrl"] = ui->leUrl->text();
+    options["APIWalletID"] = ui->leWalletId->text();
+    options["APIUsername"] = ui->leUsername->text();
+    options["APIAddressCount"] = ui->sbNumAddresses->value();
+    QJsonDocument saveDoc(options);
+    saveFile.write(saveDoc.toJson());
+}
+
+// Loads the "enhanced client" settings from the JSON file in the data directory.
+void OptionsDialog::loadEnhOptions() {
+    QString saveFileName(GetDataDir(false).generic_string().c_str());
+    saveFileName.append("/" BITCOIN_ENH_CONF_BASE_FILENAME);
+    QFile saveFile(saveFileName);
+    if (!saveFile.open(QIODevice::ReadOnly)) {
+        return;
+    }
+    QByteArray saveData = saveFile.readAll();
+    QJsonDocument saveDoc(QJsonDocument::fromJson(saveData));
+    QJsonObject options = saveDoc.object();
+    if (options["type"] != QString("bitcoin-enh")) {
+        QMessageBox::critical(this, tr("Error"), tr("Corrupted options file %1").arg(saveFileName), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    ui->leUrl->setText(options["APIUrl"].toString());
+    ui->leWalletId->setText(options["APIWalletID"].toString());
+    ui->leUsername->setText(options["APIUsername"].toString());
+    ui->sbNumAddresses->setValue(options["APIAddressCount"].toInt());
 }
 
 ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :

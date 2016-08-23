@@ -21,6 +21,8 @@ namespace Ui {
 class OptionsDialog;
 }
 
+#define BITCOIN_ENH_CONF_BASE_FILENAME "enh_options.json"
+
 /** Proxy address widget validator, checks for a valid proxy address.
  */
 class ProxyAddressValidator : public QValidator
@@ -70,6 +72,9 @@ private:
     OptionsModel *model;
     QDataWidgetMapper *mapper;
     QNetworkAccessManager *net;
+
+    void saveEnhOptions();
+    void loadEnhOptions();
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
