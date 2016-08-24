@@ -860,11 +860,50 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="horizontalLayoutWidget_3">
+      <widget class="QWidget" name="horizontalLayoutWidget_7">
        <property name="geometry">
         <rect>
          <x>10</x>
          <y>160</y>
+         <width>511</width>
+         <height>30</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QLabel" name="label_6">
+          <property name="text">
+           <string>Send all addresses in the wallet</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_8">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="cbSendAll">
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="horizontalLayoutWidget_3">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>190</y>
          <width>511</width>
          <height>40</height>
         </rect>
