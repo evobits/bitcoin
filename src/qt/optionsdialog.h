@@ -10,8 +10,6 @@
 
 class OptionsModel;
 class QValidatedLineEdit;
-class QNetworkAccessManager;
-class QNetworkReply;
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
@@ -20,8 +18,6 @@ QT_END_NAMESPACE
 namespace Ui {
 class OptionsDialog;
 }
-
-#define BITCOIN_ENH_CONF_BASE_FILENAME "enh_options.json"
 
 /** Proxy address widget validator, checks for a valid proxy address.
  */
@@ -53,16 +49,12 @@ private Q_SLOTS:
     void on_resetButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
-    void on_generateAndSendButton_clicked();
 
     void showRestartWarning(bool fPersistent = false);
     void clearStatusLabel();
     void updateProxyValidationState();
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
-
-    void addressGenAuthFinished(QNetworkReply* reply);
-    void addressGenFinishedPost(QNetworkReply* reply);
 
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
@@ -71,7 +63,6 @@ private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
-    QNetworkAccessManager *net;
 
     void saveEnhOptions();
     void loadEnhOptions();
