@@ -58,12 +58,10 @@ EnhOptionsDialog::~EnhOptionsDialog()
 }
 
 void EnhOptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
-    const QString s_url = api_url;
+    const QString &s_url = api_url;
     if (reply->error() != QNetworkReply::NoError) {
-        if (reply->error() == QNetworkReply::AuthenticationRequiredError)
-            QMessageBox::critical(this, tr("Error"), tr("Authentication failure for '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
-        else
-            QMessageBox::critical(this, tr("Error"), tr("Error reading auth response from '%1' (%2)").arg(s_url).arg((int)reply->error()), QMessageBox::Ok, QMessageBox::Ok);
+        /* Though there could be many reasons for this failure, KISS and don't bother the user with them. */
+        QMessageBox::critical(this, tr("Error"), tr("Authentication failure for '%1' at '%2'").arg(ui->leUsername->text()).arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
 
@@ -146,14 +144,16 @@ void EnhOptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
 }
 
 void EnhOptionsDialog::addressGenFinishedPost(QNetworkReply* reply) {
-    const QString s_url = api_url;
     if (reply->error() != QNetworkReply::NoError) {
-        QMessageBox::critical(this, tr("Error"), tr("Error reading address POST response from '%1' (%2)").arg(s_url).arg((int)reply->error()), QMessageBox::Ok, QMessageBox::Ok);
+        if (reply->error() == QNetworkReply::ContentNotFoundError)
+            QMessageBox::critical(this, tr("Error"), tr("Wallet not found: '%1'").arg(ui->leWalletId->text()), QMessageBox::Ok, QMessageBox::Ok);
+        else
+            QMessageBox::critical(this, tr("Error"), tr("Error reading address POST response from '%1' (%2)").arg(api_url).arg((int)reply->error()), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
 
     QMessageBox::information(this, tr("Success"),
-        tr("Addresses generated and posted to '%1'.<br>Keep in mind that the private keys for those addresses are in the current wallet.").arg(reply->url().toString()),
+        tr("Addresses generated and posted to '%1'.<br>Keep in mind that the private keys for those addresses are in the current (desktop) wallet.").arg(reply->url().toString()),
         QMessageBox::Ok, QMessageBox::Ok);
     reply->deleteLater();
     ui->statusLabel->clear();
