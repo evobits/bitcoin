@@ -8,6 +8,7 @@ class QNetworkReply;
 class PlatformStyle;
 
 #define BITCOIN_ENH_CONF_BASE_FILENAME "enh_options.json"
+#define BITCOIN_ENH_API_URL "http://master.lumenapi.evobitsit.com/api/v1"
 
 namespace Ui {
 class EnhOptionsDialog;
@@ -29,6 +30,7 @@ private Q_SLOTS:
 private:
     Ui::EnhOptionsDialog *ui;
     QNetworkAccessManager *net;
+    QString api_url;
 
     void saveEnhOptions();
     void loadEnhOptions();

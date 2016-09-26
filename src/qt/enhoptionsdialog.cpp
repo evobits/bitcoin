@@ -40,11 +40,14 @@
 
 EnhOptionsDialog::EnhOptionsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::EnhOptionsDialog)
+    ui(new Ui::EnhOptionsDialog),
+    api_url(BITCOIN_ENH_API_URL)
 {
     ui->setupUi(this);
     net = new QNetworkAccessManager(this);
+    /* By the time this is run, the bitcoin core is running. */
     loadEnhOptions();
+    ui->statusLabel->setText(tr("API URL: %1").arg(api_url));
 }
 
 EnhOptionsDialog::~EnhOptionsDialog()
@@ -55,7 +58,7 @@ EnhOptionsDialog::~EnhOptionsDialog()
 }
 
 void EnhOptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
-    const QString &s_url = ui->leUrl->text();
+    const QString s_url = api_url;
     if (reply->error() != QNetworkReply::NoError) {
         if (reply->error() == QNetworkReply::AuthenticationRequiredError)
             QMessageBox::critical(this, tr("Error"), tr("Authentication failure for '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
@@ -143,7 +146,7 @@ void EnhOptionsDialog::addressGenAuthFinished(QNetworkReply* reply) {
 }
 
 void EnhOptionsDialog::addressGenFinishedPost(QNetworkReply* reply) {
-    const QString &s_url = ui->leUrl->text();
+    const QString s_url = api_url;
     if (reply->error() != QNetworkReply::NoError) {
         QMessageBox::critical(this, tr("Error"), tr("Error reading address POST response from '%1' (%2)").arg(s_url).arg((int)reply->error()), QMessageBox::Ok, QMessageBox::Ok);
         return;
@@ -160,7 +163,7 @@ void EnhOptionsDialog::on_generateAndSendButton_clicked()
 {
 #ifdef ENABLE_WALLET
     const int n_addr = ui->sbNumAddresses->value();
-    const QString &s_url = ui->leUrl->text();
+    const QString s_url = api_url;
     const QString &s_username = ui->leUsername->text();
     const QString &s_password = ui->lePassword->text();
     const QString s_client_id = "1";
@@ -218,7 +221,8 @@ void EnhOptionsDialog::saveEnhOptions() {
     }
     QJsonObject options;
     options["type"] = QString("bitcoin-enh");
-    options["APIUrl"] = ui->leUrl->text();
+    if (strcmp(BITCOIN_ENH_API_URL, api_url.toStdString().c_str()) != 0)
+        options["APIUrl"] = api_url;
     options["APIWalletID"] = ui->leWalletId->text();
     options["APIUsername"] = ui->leUsername->text();
     options["APIAddressCount"] = ui->sbNumAddresses->value();
@@ -241,9 +245,9 @@ void EnhOptionsDialog::loadEnhOptions() {
         QMessageBox::critical(this, tr("Error"), tr("Corrupted options file %1").arg(saveFileName), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
-    ui->leUrl->setText(options["APIUrl"].toString());
+    if (options["APIUrl"] != QJsonValue::Undefined && options["APIUrl"].toString() != "")
+        api_url = options["APIUrl"].toString();
     ui->leWalletId->setText(options["APIWalletID"].toString());
     ui->leUsername->setText(options["APIUsername"].toString());
     ui->sbNumAddresses->setValue(options["APIAddressCount"].toInt());
 }
-
