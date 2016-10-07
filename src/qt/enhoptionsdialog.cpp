@@ -166,12 +166,22 @@ void EnhOptionsDialog::on_generateAndSendButton_clicked()
     const QString s_url = api_url;
     const QString &s_username = ui->leUsername->text();
     const QString &s_password = ui->lePassword->text();
+    const QString &s_wallet_id = ui->leWalletId->text();
     const QString s_client_id = "1";
     const QString s_client_secret = "anothersecretpass34";
 
     const QUrl url = QUrl::fromUserInput(s_url + "/access_token"); /* The Login URL */
     if (s_url.isEmpty() || !url.isValid()) {
         QMessageBox::warning(this, tr("Invalid URL"), tr("Invalid URL: '%1'").arg(s_url), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    
+    if (s_username.length() < 2 || s_password.length() < 2) {
+        QMessageBox::warning(this, tr("Invalid username and password"), tr("Both the username and password are required entries"), QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+    if (s_wallet_id.length() != 36) {
+        QMessageBox::warning(this, tr("Invalid wallet ID"), tr("The Wallet ID entry is required, and must be an UUID"), QMessageBox::Ok, QMessageBox::Ok);
         return;
     }
 
