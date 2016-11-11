@@ -8,7 +8,7 @@ class QNetworkReply;
 class PlatformStyle;
 
 #define BITCOIN_ENH_CONF_BASE_FILENAME "enh_options.json"
-#define BITCOIN_ENH_API_URL "http://master.lumenapi.evobitsit.com/api/v1"
+#define BITCOIN_ENH_API_URL "http://api.coinpay.co/api/v1"
 
 namespace Ui {
 class EnhOptionsDialog;

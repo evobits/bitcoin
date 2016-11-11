@@ -292,8 +292,8 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
-    enhOptionsAction = new QAction(platformStyle->SingleColorIcon(":/icons/puzzle"), tr("&Enhanced options"), this);
-    enhOptionsAction->setStatusTip(tr("Show Enhanced options"));
+    enhOptionsAction = new QAction(platformStyle->SingleColorIcon(":/icons/puzzle"), tr("Coin&Pay"), this);
+    enhOptionsAction->setStatusTip(tr("Show CoinPay options"));
     enhOptionsAction->setToolTip(enhOptionsAction->statusTip());
     enhOptionsAction->setCheckable(true);
     enhOptionsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
