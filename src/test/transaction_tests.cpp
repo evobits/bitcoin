@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,12 @@
 #include "test/test_bitcoin.h"
 
 #include "clientversion.h"
+#include "checkqueue.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h" // For CheckTransaction
+#include "validation.h" // For CheckTransaction
 #include "policy/policy.h"
 #include "script/script.h"
 #include "script/sign.h"
@@ -49,10 +50,13 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
     (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
+    (string("MINIMALIF"), (unsigned int)SCRIPT_VERIFY_MINIMALIF)
+    (string("NULLFAIL"), (unsigned int)SCRIPT_VERIFY_NULLFAIL)
     (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
     (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
     (string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
-    (string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
+    (string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM)
+    (string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE);
 
 unsigned int ParseScriptFlags(string strFlags)
 {
@@ -146,13 +150,13 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
             string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION);
-            CTransaction tx;
-            stream >> tx;
+            CTransaction tx(deserialize, stream);
 
             CValidationState state;
             BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
             BOOST_CHECK(state.IsValid());
 
+            PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size(); i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
@@ -168,7 +172,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err),
+                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
                                     strTest);
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
@@ -231,12 +235,12 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
             string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION );
-            CTransaction tx;
-            stream >> tx;
+            CTransaction tx(deserialize, stream);
 
             CValidationState state;
             fValid = CheckTransaction(tx, state) && state.IsValid();
 
+            PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
@@ -252,7 +256,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 }
                 const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      witness, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err);
+                                      witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
             }
             BOOST_CHECK_MESSAGE(!fValid, strTest);
             BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
@@ -340,7 +344,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 }
 
-void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransaction& output, CMutableTransaction& input, bool success = true)
+void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
 {
     CMutableTransaction outputm;
     outputm.nVersion = 1;
@@ -354,22 +358,22 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
     ssout << outputm;
     ssout >> output;
-    assert(output.vin.size() == 1);
-    assert(output.vin[0] == outputm.vin[0]);
-    assert(output.vout.size() == 1);
-    assert(output.vout[0] == outputm.vout[0]);
-    assert(output.wit.vtxinwit.size() == 0);
+    assert(output->vin.size() == 1);
+    assert(output->vin[0] == outputm.vin[0]);
+    assert(output->vout.size() == 1);
+    assert(output->vout[0] == outputm.vout[0]);
+    assert(output->wit.vtxinwit.size() == 0);
 
     CMutableTransaction inputm;
     inputm.nVersion = 1;
     inputm.vin.resize(1);
-    inputm.vin[0].prevout.hash = output.GetHash();
+    inputm.vin[0].prevout.hash = output->GetHash();
     inputm.vin[0].prevout.n = 0;
     inputm.wit.vtxinwit.resize(1);
     inputm.vout.resize(1);
     inputm.vout[0].nValue = 1;
     inputm.vout[0].scriptPubKey = CScript();
-    bool ret = SignSignature(keystore, output, inputm, 0, SIGHASH_ALL);
+    bool ret = SignSignature(keystore, *output, inputm, 0, SIGHASH_ALL);
     assert(ret == success);
     CDataStream ssin(SER_NETWORK, PROTOCOL_VERSION);
     ssin << inputm;
@@ -387,11 +391,11 @@ void CreateCreditAndSpend(const CKeyStore& keystore, const CScript& outscript, C
     }
 }
 
-void CheckWithFlag(const CTransaction& output, const CMutableTransaction& input, int flags, bool success)
+void CheckWithFlag(const CTransactionRef& output, const CMutableTransaction& input, int flags, bool success)
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output.vout[0].scriptPubKey, inputi.wit.vtxinwit.size() > 0 ? &inputi.wit.vtxinwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0, output.vout[0].nValue), &error);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, inputi.wit.vtxinwit.size() > 0 ? &inputi.wit.vtxinwit[0].scriptWitness : NULL, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
     assert(ret == success);
 }
 
@@ -417,6 +421,86 @@ void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
     assert(stack.size() > 0);
     stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
     script = PushAll(stack);
+}
+
+BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
+    CMutableTransaction mtx;
+    mtx.nVersion = 1;
+
+    CKey key;
+    key.MakeNewKey(true); // Need to use compressed keys in segwit or the signing will fail
+    CBasicKeyStore keystore;
+    keystore.AddKeyPubKey(key, key.GetPubKey());
+    CKeyID hash = key.GetPubKey().GetID();
+    CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
+
+    vector<int> sigHashes;
+    sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_ALL | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_NONE);
+    sigHashes.push_back(SIGHASH_SINGLE);
+    sigHashes.push_back(SIGHASH_ALL);
+
+    // create a big transaction of 4500 inputs signed by the same key
+    for(uint32_t ij = 0; ij < 4500; ij++) {
+        uint32_t i = mtx.vin.size();
+        uint256 prevId;
+        prevId.SetHex("0000000000000000000000000000000000000000000000000000000000000100");
+        COutPoint outpoint(prevId, i);
+
+        mtx.vin.resize(mtx.vin.size() + 1);
+        mtx.vin[i].prevout = outpoint;
+        mtx.vin[i].scriptSig = CScript();
+
+        mtx.vout.resize(mtx.vout.size() + 1);
+        mtx.vout[i].nValue = 1000;
+        mtx.vout[i].scriptPubKey = CScript() << OP_1;
+    }
+
+    // sign all inputs
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        bool hashSigned = SignSignature(keystore, scriptPubKey, mtx, i, 1000, sigHashes.at(i % sigHashes.size()));
+        assert(hashSigned);
+    }
+
+    CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
+    auto vstream = WithOrVersion(&ssout, 0);
+    vstream << mtx;
+    CTransaction tx(deserialize, vstream);
+
+    // check all inputs concurrently, with the cache
+    PrecomputedTransactionData txdata(tx);
+    boost::thread_group threadGroup;
+    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+
+    for (int i=0; i<20; i++)
+        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+
+    CCoins coins;
+    coins.nVersion = 1;
+    coins.fCoinBase = false;
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        CTxOut txout;
+        txout.nValue = 1000;
+        txout.scriptPubKey = scriptPubKey;
+        coins.vout.push_back(txout);
+    }
+
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        std::vector<CScriptCheck> vChecks;
+        CScriptCheck check(coins, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
+        vChecks.push_back(CScriptCheck());
+        check.swap(vChecks.back());
+        control.Add(vChecks);
+    }
+
+    bool controlCheck = control.Wait();
+    assert(controlCheck);
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
 }
 
 BOOST_AUTO_TEST_CASE(test_witness)
@@ -461,7 +545,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     keystore2.AddCScript(GetScriptForWitness(scriptMulti));
     keystore2.AddKeyPubKey(key3, pubkey3);
 
-    CTransaction output1, output2;
+    CTransactionRef output1, output2;
     CMutableTransaction input1, input2;
     SignatureData sigdata;
 
@@ -540,38 +624,21 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
-    // Witness pay-to-uncompressed-pubkey (v1).
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey1L), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2L), output2, input2);
-    CheckWithFlag(output1, input1, 0, true);
-    CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
-    CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
-    CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
+    // Signing disabled for witness pay-to-uncompressed-pubkey (v1).
+    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey1L), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2L), output2, input2, false);
 
-    // P2SH witness pay-to-uncompressed-pubkey (v1).
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1L))), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2L))), output2, input2);
-    ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1L));
-    CheckWithFlag(output1, input1, 0, true);
-    CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
-    CheckWithFlag(output1, input2, 0, true);
-    CheckWithFlag(output1, input2, SCRIPT_VERIFY_P2SH, true);
-    CheckWithFlag(output1, input2, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, false);
-    CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
+    // Signing disabled for P2SH witness pay-to-uncompressed-pubkey (v1).
+    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1L))), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2L))), output2, input2, false);
 
     // Normal 2-of-2 multisig
     CreateCreditAndSpend(keystore, scriptMulti, output1, input1, false);
     CheckWithFlag(output1, input1, 0, false);
     CreateCreditAndSpend(keystore2, scriptMulti, output2, input2, false);
     CheckWithFlag(output2, input2, 0, false);
-    BOOST_CHECK(output1 == output2);
-    UpdateTransaction(input1, 0, CombineSignatures(output1.vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1.vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    BOOST_CHECK(*output1 == *output2);
+    UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH 2-of-2 multisig
@@ -581,8 +648,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore2, GetScriptForDestination(CScriptID(scriptMulti)), output2, input2, false);
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, false);
-    BOOST_CHECK(output1 == output2);
-    UpdateTransaction(input1, 0, CombineSignatures(output1.vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1.vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    BOOST_CHECK(*output1 == *output2);
+    UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
@@ -593,8 +660,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore2, GetScriptForWitness(scriptMulti), output2, input2, false);
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
-    BOOST_CHECK(output1 == output2);
-    UpdateTransaction(input1, 0, CombineSignatures(output1.vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1.vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    BOOST_CHECK(*output1 == *output2);
+    UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
@@ -605,8 +672,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CreateCreditAndSpend(keystore2, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptMulti))), output2, input2, false);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
-    BOOST_CHECK(output1 == output2);
-    UpdateTransaction(input1, 0, CombineSignatures(output1.vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1.vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
+    BOOST_CHECK(*output1 == *output2);
+    UpdateTransaction(input1, 0, CombineSignatures(output1->vout[0].scriptPubKey, MutableTransactionSignatureChecker(&input1, 0, output1->vout[0].nValue), DataFromTransaction(input1, 0), DataFromTransaction(input2, 0)));
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, true);
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 }

@@ -14,6 +14,7 @@ gradually.
   - No indentation for public/protected/private or for namespaces.
   - No extra spaces inside parenthesis; don't do ( this )
   - No space after function names; one space after if, for and while.
+  - `++i` is preferred over `i++`.
 
 Block style example:
 ```c++
@@ -24,7 +25,7 @@ class Class
     bool Function(char* psz, int n)
     {
         // Comment summarising what this section of code does
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < n; ++i) {
             // When something fails, return early
             if (!Something())
                 return false;
@@ -231,9 +232,9 @@ General Bitcoin Core
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
      confusion and mayhem
- 
+
   - *Explanation*: If the test suite is to be updated for a change, this has to
-    be done first 
+    be done first
 
 Wallet
 -------
@@ -330,6 +331,32 @@ Strings and formatting
 
   - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion
 
+Variable names
+--------------
+
+The shadowing warning (`-Wshadow`) is enabled by default. It prevents issues rising
+from using a different variable with the same name.
+
+Please name variables so that their names do not shadow variables defined in the source code.
+
+E.g. in member initializers, prepend `_` to the argument name shadowing the
+member name:
+
+```c++
+class AddressBookPage
+{
+    Mode mode;
+}
+
+AddressBookPage::AddressBookPage(Mode _mode) :
+      mode(_mode)
+...
+```
+
+When using nested cycles, do not name the inner cycle variable the same as in
+upper cycle etc.
+
+
 Threads and synchronization
 ----------------------------
 
@@ -380,6 +407,37 @@ GUI
   - *Rationale*: Model classes pass through events and data from the core, they
     should not interact with the user. That's where View classes come in. The converse also
     holds: try to not directly access core data structures from Views.
+
+Subtrees
+----------
+
+Several parts of the repository are subtrees of software maintained elsewhere.
+
+Some of these are maintained by active developers of Bitcoin Core, in which case changes should probably go
+directly upstream without being PRed directly against the project.  They will be merged back in the next
+subtree merge.
+
+Others are external projects without a tight relationship with our project.  Changes to these should also
+be sent upstream but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated
+quickly.  Cosmetic changes should be purely taken upstream.
+
+There is a tool in contrib/devtools/git-subtree-check.sh to check a subtree directory for consistency with
+its upstream repository.
+
+Current subtrees include:
+
+- src/leveldb
+  - Upstream at https://github.com/google/leveldb ; Maintained by Google, but open important PRs to Core to avoid delay
+
+- src/libsecp256k1
+  - Upstream at https://github.com/bitcoin-core/secp256k1/ ; actively maintaned by Core contributors.
+
+- src/crypto/ctaes
+  - Upstream at https://github.com/bitcoin-core/ctaes ; actively maintained by Core contributors.
+
+- src/univalue
+  - Upstream at https://github.com/jgarzik/univalue ; report important PRs to Core to avoid delay.
+
 
 Git and github tips
 ---------------------
