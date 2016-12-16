@@ -65,6 +65,9 @@ private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
+
+    void saveEnhOptions();
+    void loadEnhOptions();
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

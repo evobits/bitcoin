@@ -19,6 +19,7 @@ class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
 class AddressBookPage;
+class EnhOptionsDialog;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -64,6 +65,7 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
+    EnhOptionsDialog *enhOptionsPage;
 
     TransactionView *transactionView;
 
@@ -84,6 +86,9 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Switch to Enhanced options page */
+    void gotoEnhOptionsPage();
 
     /** Show incoming transaction notification for new transactions.
 
