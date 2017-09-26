@@ -1,5 +1,4 @@
 Bitcoin Core
-=============
 
 Intro
 -----

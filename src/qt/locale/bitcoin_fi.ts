@@ -2438,6 +2438,10 @@
         <translation>%s kehittäjät</translation>
     </message>
     <message>
+        <source>-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>-fallbackfee on asetettu erittäin suureksi! Tämä on rahansiirtokulu jonka voit maksaa kun arvioitu rahansirtokulu ei ole saatavilla.</translation>
+    </message>
+    <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
     </message>

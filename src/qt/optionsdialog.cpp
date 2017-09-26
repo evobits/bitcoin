@@ -17,16 +17,33 @@
 #include "netbase.h"
 #include "txdb.h" // for -dbcache defaults
 
+#include "base58.h"
+#include "init.h"
+#include "pubkey.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
 #endif
 
+#include <boost/thread.hpp>
+#include <boost/algorithm/string/join.hpp>
+
+#include <QApplication>
 #include <QDataWidgetMapper>
 #include <QDir>
+#include <QFile>
 #include <QIntValidator>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QLocale>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #include <QTimer>
+#include <QUrl>
+#include <QUrlQuery>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),

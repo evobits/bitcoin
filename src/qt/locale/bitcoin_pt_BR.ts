@@ -3170,6 +3170,10 @@
         <translation>%s corrompido, recuperação falhou</translation>
     </message>
     <message>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s corrompido, recuperação falhou</translation>
+    </message>
+    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool deve ser pelo menos %d MB</translation>
     </message>
@@ -3316,6 +3320,10 @@
     <message>
         <source>Loading banlist...</source>
         <translation>Carregando lista de banidos...</translation>
+    </message>
+    <message>
+        <source>Location of the auth cookie (default: data dir)</source>
+        <translation>Localização do cookie de autenticação (padrão: diretório de dados)</translation>
     </message>
     <message>
         <source>Location of the auth cookie (default: data dir)</source>

@@ -961,6 +961,10 @@
         <translation>Konzol törlése</translation>
     </message>
     <message>
+        <source>Ban Node for</source>
+        <translation>Kitiltás oka</translation>
+    </message>
+    <message>
         <source>1 &amp;hour</source>
         <translation>1 &amp;óra</translation>
     </message>
@@ -975,6 +979,10 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 &amp;év</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>Kitiltás &amp;feloldása</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1416,6 +1424,10 @@
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
         <translation>UPnP használata porttovábbításra (alapértelmezett: 1, amikor kiszolgál és nem használt a -proxy)</translation>
+    </message>
+    <message>
+        <source>Connect only to the specified node(s)</source>
+        <translation>Csatlakozás csak a megadott csomóponthoz</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>

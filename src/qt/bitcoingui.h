@@ -111,6 +111,7 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
+    QAction *enhOptionsAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -204,6 +205,9 @@ private Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Switch to Enhanced options page */
+    void gotoEnhOptionsPage();
 
     /** Show open dialog */
     void openClicked();

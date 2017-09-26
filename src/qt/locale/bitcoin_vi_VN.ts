@@ -256,6 +256,20 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Thanh công cụ (toolbar)</translation>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Yêu cầu thanh toán(tạo mã QR và địa chỉ Bitcoin: URLs)</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Mở bitcoin:URL hoặc yêu cầu thanh toán</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>7Tùy chọn dòng lệnh</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n giờ</numerusform></translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -288,6 +302,10 @@
     <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Những giao dịch sau đó sẽ không hiện thị.</translation>
+    </message>
+    <message>
+        <source>%1 behind</source>
+        <translation>%1 chậm trễ</translation>
     </message>
     <message>
         <source>Error</source>
@@ -355,7 +373,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Ví tiền &lt;b&gt; đã được mã hóa&lt;/b&gt;và hiện &lt;b&gt;đang khóa&lt;/b&gt;</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>

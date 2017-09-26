@@ -3362,6 +3362,10 @@
         <translation>Définir la taille du cache de la base de données en mégaoctets (%d à %d, default: %d)</translation>
     </message>
     <message>
+        <source>Set maximum BIP141 block weight (default: %d)</source>
+        <translation>Définir le poids maximal de bloc BIP141 (par défaut : %d)</translation>
+    </message>
+    <message>
         <source>Set maximum block size in bytes (default: %d)</source>
         <translation>Définir la taille minimale de bloc en octets (par défaut : %d)</translation>
     </message>
