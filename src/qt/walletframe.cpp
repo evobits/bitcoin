@@ -143,6 +143,13 @@ void WalletFrame::gotoEnhOptionsPage()
         i.value()->gotoEnhOptionsPage();
 }
 
+void WalletFrame::gotoEnhUploadHDKeyPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoEnhOptionsPage();
+}
+
 void WalletFrame::gotoSignMessageTab(QString addr)
 {
     WalletView *walletView = currentWalletView();

@@ -112,6 +112,7 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *enhOptionsAction;
+    QAction *enhUploadHDKeyAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -208,6 +209,8 @@ private Q_SLOTS:
 
     /** Switch to Enhanced options page */
     void gotoEnhOptionsPage();
+    /** Switch to Enhanced upload HD key page */
+    void gotoEnhUploadHDKeyPage();
 
     /** Show open dialog */
     void openClicked();
@@ -237,7 +240,7 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
-    
+
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
 

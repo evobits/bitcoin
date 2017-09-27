@@ -125,6 +125,7 @@ QT_FORMS_UI = \
   qt/forms/debugwindow.ui \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/enhoptionsdialog.ui \
+  qt/forms/enhuploadhdkeydialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
   qt/forms/transactiondescdialog.ui
@@ -165,6 +166,7 @@ QT_MOC_CPP = \
   qt/moc_sendcoinsdialog.cpp \
   qt/moc_sendcoinsentry.cpp \
   qt/moc_enhoptionsdialog.cpp \
+  qt/moc_enhuploadhdkeydialog.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
@@ -238,6 +240,7 @@ BITCOIN_QT_H = \
   qt/rpcconsole.h \
   qt/sendcoinsdialog.h \
   qt/enhoptionsdialog.h \
+  qt/enhuploadhdkeydialog.h \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
@@ -354,6 +357,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/recentrequeststablemodel.cpp \
   qt/sendcoinsdialog.cpp \
   qt/enhoptionsdialog.cpp \
+  qt/enhuploadhdkeydialog.cpp \
   qt/sendcoinsentry.cpp \
   qt/signverifymessagedialog.cpp \
   qt/transactiondesc.cpp \
@@ -375,7 +379,7 @@ if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
 
-RES_IMAGES = 
+RES_IMAGES =
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 

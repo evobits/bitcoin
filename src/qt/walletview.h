@@ -20,6 +20,7 @@ class TransactionView;
 class WalletModel;
 class AddressBookPage;
 class EnhOptionsDialog;
+class EnhUploadHDKeyDialog;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -66,6 +67,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     EnhOptionsDialog *enhOptionsPage;
+    EnhUploadHDKeyDialog *enhUploadHDKeyPage;
 
     TransactionView *transactionView;
 
@@ -89,6 +91,8 @@ public Q_SLOTS:
 
     /** Switch to Enhanced options page */
     void gotoEnhOptionsPage();
+    /** Switch to the Upload HD key page */
+    void gotoEnhUploadHDKeyPage();
 
     /** Show incoming transaction notification for new transactions.
 

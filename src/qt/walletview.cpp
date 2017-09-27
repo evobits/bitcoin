@@ -18,6 +18,7 @@
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "enhoptionsdialog.h"
+#include "enhuploadhdkeydialog.h"
 #include "walletmodel.h"
 
 #include "ui_interface.h"
@@ -104,7 +105,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
 
-        // Connect HD enabled state signal 
+        // Connect HD enabled state signal
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
     }
 }
@@ -199,6 +200,11 @@ void WalletView::gotoSendCoinsPage(QString addr)
 void WalletView::gotoEnhOptionsPage()
 {
     setCurrentWidget(enhOptionsPage);
+}
+
+void WalletView::gotoEnhUploadHDKeyPage()
+{
+    setCurrentWidget(enhUploadHDKeyPage);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)

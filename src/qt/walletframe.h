@@ -78,6 +78,8 @@ public Q_SLOTS:
 
     /** Switch to Enhanced options page */
     void gotoEnhOptionsPage();
+    /** Switch to Enhanced upload HD key page */
+    void gotoEnhUploadHDKeyPage();
 
     /** Encrypt the wallet */
     void encryptWallet(bool status);
