@@ -319,9 +319,9 @@ void BitcoinGUI::createActions()
     enhOptionsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(enhOptionsAction);
 
-    enhUploadHDKeyAction = new QAction(platformStyle->SingleColorIcon(":/icons/upload"), tr("&Import"), this);
+    enhUploadHDKeyAction = new QAction(platformStyle->SingleColorIcon(":/icons/import"), tr("&Import"), this);
     enhUploadHDKeyAction->setStatusTip(tr("Import HD key"));
-    enhUploadHDKeyAction->setToolTip(enhOptionsAction->statusTip());
+    enhUploadHDKeyAction->setToolTip(enhUploadHDKeyAction->statusTip());
     enhUploadHDKeyAction->setCheckable(true);
     enhUploadHDKeyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(enhUploadHDKeyAction);
