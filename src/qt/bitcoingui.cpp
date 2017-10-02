@@ -23,6 +23,7 @@
 #include "utilitydialog.h"
 
 #ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
 #include "walletframe.h"
 #include "walletmodel.h"
 #endif // ENABLE_WALLET
@@ -736,7 +737,12 @@ void BitcoinGUI::gotoEnhOptionsPage()
 
 void BitcoinGUI::gotoEnhUploadHDKeyPage()
 {
-    if (walletFrame) walletFrame->gotoEnhUploadHDKeyPage();
+    if (vpwallets[0]->IsHDEnabled()) {
+        if (walletFrame) walletFrame->gotoEnhUploadHDKeyPage();
+    } else {
+        message(tr("HD wallet is not enabled"), tr("HD wallet is not enabled"),
+        CClientUIInterface::MSG_INFORMATION);
+    }
 }
 #endif // ENABLE_WALLET
 
