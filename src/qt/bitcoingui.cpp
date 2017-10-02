@@ -37,8 +37,6 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include <iostream>
-
 #include <QAction>
 #include <QApplication>
 #include <QDateTime>
@@ -343,7 +341,7 @@ void BitcoinGUI::createActions()
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
     connect(enhOptionsAction, SIGNAL(triggered()), this, SLOT(gotoEnhOptionsPage()));
-    connect(enhUploadHDKeyAction, SIGNAL(triggered()), this, SLOT(gotoEnhOptionsPage()));
+    connect(enhUploadHDKeyAction, SIGNAL(triggered()), this, SLOT(gotoEnhUploadHDKeyPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);

@@ -16,7 +16,8 @@ FORMS += \
     ../src/qt/forms/sendcoinsentry.ui \
     ../src/qt/forms/signverifymessagedialog.ui \
     ../src/qt/forms/transactiondescdialog.ui \
-    ../src/qt/forms/enhoptionsdialog.ui
+    ../src/qt/forms/enhoptionsdialog.ui \
+    ../src/qt/forms/enhuploadhdkeydialog.ui
 
 RESOURCES += \
     ../src/qt/bitcoin.qrc

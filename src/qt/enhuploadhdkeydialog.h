@@ -7,9 +7,6 @@ class QNetworkReply;
 
 class PlatformStyle;
 
-#define BITCOIN_ENH_CONF_BASE_FILENAME "enh_options.json"
-#define BITCOIN_ENH_API_URL "http://api.coinpay.co/api/v1"
-
 namespace Ui {
 class EnhUploadHDKeyDialog;
 }
@@ -23,17 +20,10 @@ public:
     ~EnhUploadHDKeyDialog();
 
 private Q_SLOTS:
-    void addressGenAuthFinished(QNetworkReply* reply);
-    void addressGenFinishedPost(QNetworkReply* reply);
-    void on_generateAndSendButton_clicked();
+    void on_btnChoose_clicked();
 
 private:
     Ui::EnhUploadHDKeyDialog *ui;
-    QNetworkAccessManager *net;
-    QString api_url;
-
-    void saveEnhOptions();
-    void loadEnhOptions();
 };
 
 #endif // ENHUPLOADHDKEYDIALOG_H

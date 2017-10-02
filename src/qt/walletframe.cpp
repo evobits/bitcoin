@@ -147,7 +147,7 @@ void WalletFrame::gotoEnhUploadHDKeyPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoEnhOptionsPage();
+        i.value()->gotoEnhUploadHDKeyPage();
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)

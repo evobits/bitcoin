@@ -43,7 +43,7 @@
         <item>
          <widget class="QLabel" name="label_10">
           <property name="text">
-           <string>Number of addresses to generate:</string>
+           <string>Filename to import:</string>
           </property>
          </widget>
         </item>
@@ -61,157 +61,12 @@
          </spacer>
         </item>
         <item>
-         <widget class="QSpinBox" name="sbNumAddresses">
-          <property name="suffix">
-           <string/>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>100000</number>
-          </property>
-          <property name="value">
-           <number>10000</number>
-          </property>
-         </widget>
+         <widget class="QLineEdit" name="leFilename"/>
         </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_14">
         <item>
-         <widget class="QLabel" name="label_12">
+         <widget class="QPushButton" name="btnChoose">
           <property name="text">
-           <string>Username:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_14">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="leUsername">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="placeholderText">
-           <string>username</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_8">
-        <item>
-         <widget class="QLabel" name="label_7">
-          <property name="text">
-           <string>Password:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_9">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="lePassword">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="echoMode">
-           <enum>QLineEdit::PasswordEchoOnEdit</enum>
-          </property>
-          <property name="placeholderText">
-           <string>password</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_10">
-        <item>
-         <widget class="QLabel" name="label_9">
-          <property name="text">
-           <string>Wallet ID</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_11">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLineEdit" name="leWalletId">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="echoMode">
-           <enum>QLineEdit::Normal</enum>
-          </property>
-          <property name="placeholderText">
-           <string>6e73d88f-7b7e-4ec7-a7a8-323abb901c4d  </string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_9">
-        <item>
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>Send all addresses in the wallet</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_10">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbSendAll">
-          <property name="text">
-           <string/>
+           <string>Choose &amp;file...</string>
           </property>
          </widget>
         </item>
@@ -233,9 +88,9 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="generateAndSendButton">
+         <widget class="QPushButton" name="btnImport">
           <property name="text">
-           <string>&amp;Generate and send</string>
+           <string>&amp;Import</string>
           </property>
          </widget>
         </item>
